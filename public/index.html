@@ -49,7 +49,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     // iframe.contentWindow.document. Our bundler replaces documentElement,
     // orphaning the iframe (contentWindow -> null) so the read throws.
     // This is harmless CF noise — suppress the red error banner.
-    if (e && e.message && /Cannot read propert(y|ies) of null \(reading ['\"]document['\"]\)/.test(e.message)) {
+    // Browsers phrase this TypeError differently, so match the underlying
+    // "null" + "document/contentWindow" pattern rather than a specific string:
+    //   Chrome/V8:     "Cannot read properties of null (reading 'document')"
+    //   Safari/WebKit: "null is not an object (evaluating 'a.contentWindow.document')"
+    //   Firefox/SM:    "a.contentWindow is null" (and similar variants)
+    if (e && e.message && /null/.test(e.message) && /(contentWindow|['\"]document['\"]|\.document)/.test(e.message)) {
       return;
     }
     if (e && e.filename && /\/cdn-cgi\/challenge-platform\//.test(e.filename)) {
