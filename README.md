@@ -4,11 +4,13 @@ Terminal-style landing page for [nomadamas.org](https://nomadamas.org) — NomaD
 
 ## Stack
 
-Single `index.html` (self-contained; assets embedded as base64 via a custom bundler tag — fonts, data, rendered template all live inside the file). Served locally by `http-server` via pm2, exposed to the internet through a Cloudflare Tunnel.
+Single `public/index.html` (self-contained; assets embedded as base64 via a custom bundler tag — fonts, data, rendered template all live inside the file). Served locally by `http-server public/` via pm2, and deployed to Cloudflare Pages on push to `main` (Pages `Build output directory: public`).
 
 ```
-request → Cloudflare edge → cloudflared tunnel → pm2 (http-server :3030) → index.html
+request → Cloudflare Pages (or cloudflared tunnel during migration) → public/index.html
 ```
+
+The `public/` folder is the Pages build output directory; `node_modules/`, `package.json`, etc. stay at the repo root and are ignored by Pages.
 
 ## Local development
 
@@ -17,17 +19,17 @@ npm install
 npm start   # serves on http://127.0.0.1:3030
 ```
 
-Because the served file has `Cache-Control: no-cache, no-store, must-revalidate` and `http-server` runs with `-c-1`, any edit to `index.html` is visible on browser refresh without restarting pm2.
+Because the served file has `Cache-Control: no-cache, no-store, must-revalidate` and `http-server` runs with `-c-1`, any edit to `public/index.html` is visible on browser refresh without restarting pm2.
 
 ## Production layout
 
-- **pm2 process**: `nomadamas-landing` (see `ecosystem.config.cjs`)
-- **Tunnel**: `~/.cloudflared/config.yml` ingress `nomadamas.org → http://localhost:3030`
-- **pm2 process**: `nomadamas-tunnel` runs `cloudflared tunnel run --token ...`
+- **Cloudflare Pages**: auto-deploys `public/` on push to `main` (project `nomadamas-landing-page`, `https://nomadamas.org`). Build command: `exit 0`. Output directory: `public`.
+- **(legacy, during migration only) pm2 process `nomadamas-landing`**: serves `public/` locally via http-server for dev mirroring; see `ecosystem.config.cjs`.
+- **cloudflared tunnel `nomadamas-tunnel`**: still serves other subdomains (`jeffrey-blog.nomadamas.org`, `k-skill-proxy.nomadamas.org`, etc.). The `nomadamas.org` ingress rule should be removed once Pages takes over.
 
-Update HTML → `cp newfile index.html` → reflected immediately. No deploy step.
+Update HTML → `git add public/index.html && git commit -m 'update content' && git push` → Pages auto-deploys within ~30 seconds.
 
-## Structure of `index.html`
+## Structure of `public/index.html`
 
 The file is a single terminal-themed page with:
 - Boot sequence animation
