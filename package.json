@@ -1,0 +1,12 @@
+{
+  "name": "nomadamas-landing-page",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NomaDamas landing page (nomadamas.org) served via Cloudflare Tunnel",
+  "scripts": {
+    "start": "http-server . -p 3030 -a 127.0.0.1 -c-1 --cors -s"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}
