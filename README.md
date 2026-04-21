@@ -1,61 +1,97 @@
-# nomadamas-landing-page
+<h1 align="center">
+  <a href="https://nomadamas.org"><code>nomadamas.org</code></a>
+</h1>
 
-Terminal-style landing page for [nomadamas.org](https://nomadamas.org) — NomaDamas, an AI open-source hacker house in Seoul.
+<p align="center">
+  Terminal-style landing page for <a href="https://github.com/NomaDamas"><strong>NomaDamas</strong></a> —
+  an AI open-source hacker house in Seoul.
+</p>
+
+<p align="center">
+  <strong>👉 <a href="https://nomadamas.org">https://nomadamas.org</a></strong>
+</p>
+
+<p align="center">
+  <a href="https://nomadamas.org">
+    <img src="docs/screenshot.png" alt="NomaDamas terminal landing page screenshot" width="820">
+  </a>
+</p>
+
+---
 
 ## Stack
 
-Single `public/index.html` (self-contained; assets embedded as base64 via a custom bundler tag — fonts, data, rendered template all live inside the file). Deployed to Cloudflare Pages on push to `main`.
+Single `public/index.html` (self-contained; fonts + data + rendered template all live inside the file as base64/JSON). No framework, no build step. Deployed to Cloudflare Pages on every push to `main`.
 
 ```
-request → Cloudflare Pages (edge) → public/index.html
+request → Cloudflare Pages edge → public/index.html
 ```
 
 The `public/` folder is the Pages build output directory; `node_modules/`, `package.json`, etc. stay at the repo root and are ignored by Pages.
 
-## Local development
+## Updating the site
+
+```bash
+git clone git@github.com:NomaDamas/nomadamas-landing-page.git
+cd nomadamas-landing-page
+# edit public/index.html
+git commit -am "update: <what changed>"
+git push
+# live at https://nomadamas.org within ~30 seconds
+```
+
+See [`AGENTS.md`](AGENTS.md) for the safe edit pattern when touching CSS/JS inside the bundler template (JSON round-trip required).
+
+## Local preview (optional)
 
 ```bash
 npm install
-npm start   # serves on http://127.0.0.1:3030
+npm start          # http-server public/ on http://127.0.0.1:3030
 ```
 
-Because `http-server` runs with `-c-1`, any edit to `public/index.html` is visible on browser refresh with no server restart.
+`http-server` runs with `-c-1` (no cache) so edits reflect on browser refresh.
 
 ## Deployment
 
-Cloudflare Pages, project `nomadamas-landing-page` connected to `NomaDamas/nomadamas-landing-page` on GitHub.
+Cloudflare Pages project `nomadamas-landing-page` connected to this repo.
 
-- **Build command**: `exit 0`
-- **Build output directory**: `public`
-- **Framework preset**: None
-- **Custom domains**: `nomadamas.org`, `landing.nomadamas.org`
+| Setting | Value |
+|---|---|
+| Build command | `exit 0` |
+| Build output directory | `public` |
+| Framework preset | None |
+| Custom domains | `nomadamas.org`, `landing.nomadamas.org` |
+| Production branch | `main` |
 
-Push to `main` → Pages auto-builds (no-op) and publishes contents of `public/`. Live within ~30 seconds.
+Push to `main` → Pages auto-deploys. Rollback: CF Dashboard → Workers & Pages → `nomadamas-landing-page` → Deployments → past deployment → **Rollback** (< 1 minute, no git history pollution).
 
-Rollback: Cloudflare Dashboard → Workers & Pages → `nomadamas-landing-page` → Deployments → past deployment → Rollback.
+## What's inside `public/index.html`
 
-## Structure of `public/index.html`
+- Boot sequence animation (8 lines, one per 90ms)
+- Hero: mission + BUILD/SHIP/GROW pills + `whoami.yml` stats
+- Members table (6 rows; card-stack on mobile)
+- 15 project cards across `NomaDamas/`, `Marker-Inc-Korea/`, `vkehfdl1/` orgs
+- Interactive shell — auto-types `whoami` then `manifesto`; accepts `help`, `members`, `projects`, `manifesto`, `contact`, `join`, `sudo`, `clear`, and per-project `open <name>`
+- Sequential line-by-line reveal animation after page load, respecting `prefers-reduced-motion`
 
-The file is a single terminal-themed page with:
-- Boot sequence animation
-- Hero (mission + whoami.yml stats)
-- Members table (card-stack on mobile)
-- Project cards (15 repos across NomaDamas / Marker-Inc-Korea / vkehfdl1)
-- Interactive shell (auto-types `whoami` then `manifesto`, then accepts user input)
-- Sequential line-by-line reveal animation after page load
-
-The `<script type="__bundler/template">` block holds the actual rendered HTML as a JSON-encoded string. On page load, a bootstrap script:
-1. Parses the template JSON
-2. Inlines asset blob URLs (fonts) from the `__bundler/manifest` block
-3. Replaces `document.documentElement` with the parsed DOM
-4. Re-creates every `<script>` so inline scripts execute (DOMParser-created scripts are inert per spec)
-
-### Editing tips
-
-Editing the template CSS/JS must go through a JSON round-trip because the stored bytes use `\"` and `\n` as escape sequences. See `AGENTS.md` for the safe patch pattern, and any `python3 <<EOF ... json.loads ... json.dumps(ensure_ascii=False) ...` example from the commit history.
-
-**Gotcha**: `json.dumps` normalizes `<\/script>` back to `</script>`, which breaks the outer `<script type="__bundler/template">` tag. Always re-apply `.replace('</script>', '<\\/script>')` on the JSON output before splicing back.
+The `<script type="__bundler/template">` block stores the actual rendered HTML as a JSON-encoded string. On page load, a bootstrap script parses the template JSON, inlines base64-decoded font blobs, replaces `document.documentElement`, and re-creates each `<script>` so inline scripts execute.
 
 ## Mobile
 
-Tested at 360 / 375 / 393 / 768 px viewports. Members table becomes a card stack at ≤600px, ASCII logo scales down to 7px/6px at ≤480/≤380px.
+Tested at 360 / 375 / 393 / 768 px viewports.
+
+- `≤900px` — hero collapses to 1 column
+- `≤720px` — BUILD/SHIP/GROW pills stack; project cards go 1 column
+- `≤600px` — members table becomes a card stack, one row per member
+- `≤480px` / `≤380px` — ASCII logo scales down to 7px / 6px monospace
+
+## Editing data
+
+Project cards + member list are hardcoded in the `data` object inside the template's render script.
+
+- `data.projects` — add an object `{ name, owner, desc, lang, stars, forks, url }`. The stats bar (`15 repos · 10,444 ★`) auto-sums.
+- `data.members` — add an object `{ handle, name, tags, notable }`.
+- Non-NomaDamas repos must include an `owner` field (e.g. `Marker-Inc-Korea`, `vkehfdl1`). The card URL uses `${p.owner}/${p.name}`.
+- GitHub star counts are static snapshots — refresh manually when they drift.
+
+All data edits go through the JSON round-trip pattern described in [`AGENTS.md`](AGENTS.md).
