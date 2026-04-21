@@ -29,42 +29,39 @@ start  = text.index(MARKER) + len(MARKER)
 end    = text.index(END, start)
 tpl    = json.loads(text[start:end])      # plain CSS/JS/HTML text
 
-# Edit as plain Python string (no escapes)
 anchor = '@media (max-width:640px){ .ascii{font-size:9px} }'
 assert tpl.count(anchor) == 1, 'anchor must be unique'
 tpl = tpl.replace(anchor, anchor + '\n  /* new rule */ .x { color: red }', 1)
 
-# IMPORTANT: json.dumps normalizes `<\/script>` → `</script>`, which
-# prematurely closes the outer <script type="__bundler/template"> tag.
-# Re-escape it before writing.
 new_raw = json.dumps(tpl, ensure_ascii=False).replace('</script>', '<\\/script>')
 
 text = text[:start] + new_raw + text[end:]
 path.write_text(text)
 
-# Round-trip sanity check
 raw2 = path.read_text()
 s2 = raw2.index(MARKER) + len(MARKER); e2 = raw2.index(END, s2)
 assert json.loads(raw2[s2:e2]) == tpl, 'round-trip mismatch'
 ```
 
-If the bundler fails after your edit, you'll see the site's red error banner (`__bundler_err`) showing `Bundle unpack error: SyntaxError: ...`. That banner is your signal.
+`json.dumps` normalizes `<\/script>` → `</script>`, which prematurely closes the outer `<script type="__bundler/template">` tag. The `.replace('</script>', '<\\/script>')` step re-escapes it.
+
+If the bundler fails after your edit, the site shows a red error banner (`__bundler_err`) with `Bundle unpack error: SyntaxError: ...`. That banner is your signal.
 
 ## Other gotchas
 
-- **`<input autofocus>` inside the template scrolls the page on load** when the bundler inserts DOM. Don't re-add `autofocus`. Any focus-on-click uses `input.focus({preventScroll: true})` — keep that flag.
+- **`<input autofocus>` inside the template scrolls the page on load** when the bundler inserts DOM. Don't re-add `autofocus`. Focus-on-click uses `input.focus({preventScroll: true})` — keep that flag.
 - **`print()` in the shell doesn't auto-scroll unless `window.__userTyping` is true** (set on `Enter` keydown). This is intentional — initial auto-typed `whoami` / `manifesto` must not yank the viewport.
-- **CF Bot Fight Mode injects a `/cdn-cgi/challenge-platform/scripts/jsd/main.js` loader** which creates a hidden iframe on `document.body`. After our bundler `replaceWith`s the documentElement, that iframe is orphaned and its `contentWindow.document` throws. The bundler's error handler filters this (`Cannot read properties of null (reading 'document')` + `/cdn-cgi/challenge-platform/` filename) — don't remove the filter even if Bot Fight Mode is currently off; the toggle can flip.
-- **Cascade reveal animation is JS-driven, not CSS.** The list of selectors + delays lives inside the template script (search `const selectors = [`). Order matters: the `.hero > div:last-child` item is deliberately placed between the first pill (BUILD) and second pill (SHIP) so the whoami.yml block pops in alongside pills, not before or after.
+- **CF Bot Fight Mode injects a `/cdn-cgi/challenge-platform/scripts/jsd/main.js` loader** which creates a hidden iframe on `document.body`. After our bundler `replaceWith`s the documentElement, that iframe is orphaned and its `contentWindow.document` throws. The bundler's error handler filters this by matching `null` + `contentWindow` / `'document'` / `.document` in the error message (covers Chrome, Safari, Firefox phrasings). Don't remove the filter even if Bot Fight Mode is currently off; the toggle can flip.
+- **Cascade reveal animation is JS-driven, not CSS.** The list of selectors + delays lives inside the template script (search `const selectors = [`). Order matters: `.hero > div:last-child` is deliberately placed between the first pill (BUILD) and second pill (SHIP) so the whoami.yml block pops in alongside pills.
 
-## Local dev / verification
+## Local dev
 
 ```bash
-npm install            # installs http-server locally
-pm2 start ecosystem.config.cjs   # daemon on 127.0.0.1:3030, pm2 name: nomadamas-landing
+npm install
+npm start           # http-server public/ on 127.0.0.1:3030, cache off
 ```
 
-The pm2 service runs with `http-server -c-1 --cors -s` so cache is OFF — edits reflect on browser refresh with no restart.
+Edit `public/index.html`, refresh browser — no restart needed.
 
 Mobile verification with Playwright (MCP skill `playwright`):
 
@@ -84,15 +81,14 @@ for (const v of [{w:360,h:800},{w:375,h:667},{w:393,h:852},{w:768,h:1024}]) {
 
 ## Deployment
 
-Production: **Cloudflare Pages** project `nomadamas-landing-page` connected to `NomaDamas/nomadamas-landing-page` on GitHub. Push to `main` → Pages auto-builds (no-op: `exit 0`) and publishes contents of `public/`. Live at `https://nomadamas.org`.
+Cloudflare Pages, project `nomadamas-landing-page` (GitHub `NomaDamas/nomadamas-landing-page`).
 
-- **Build command**: `exit 0` (nothing to build; Pages must still run a command to unlock Pages Functions slot)
+- **Build command**: `exit 0`
 - **Build output directory**: `public`
 - **Framework preset**: None
+- **Custom domains**: `nomadamas.org`, `landing.nomadamas.org`
 
-Legacy dev path (kept for local preview): `pm2` serves `public/` on `127.0.0.1:3030`. The `nomadamas-tunnel` pm2 service continues to handle *other* subdomains (`jeffrey-blog.nomadamas.org`, `k-skill-proxy.nomadamas.org`, etc.) — don't delete the tunnel, just remove the `nomadamas.org` ingress rule from `~/.cloudflared/config.yml` once Pages is live.
-
-Rollback: Cloudflare Dashboard → Workers & Pages → `nomadamas-landing-page` → Deployments → any past deployment → **Rollback** (< 1 minute, no git history pollution).
+Push to `main` → Pages auto-builds and publishes. Live within ~30 seconds. Rollback via Dashboard → Deployments → Rollback (< 1 minute, no git history pollution).
 
 ## Data sources
 
@@ -104,4 +100,4 @@ Rollback: Cloudflare Dashboard → Workers & Pages → `nomadamas-landing-page` 
 
 - Don't change the bundler scheme (manifest/template/ext_resources script tags). The whole file depends on it.
 - Don't add a build step or framework. The value proposition of this page is single-file, zero-deps, editable in any text editor.
-- Don't touch `ecosystem.config.cjs` paths (`/Users/jeffrey/...`, `/opt/homebrew/bin/node`) without checking they exist on the target machine. The `/opt/homebrew/bin/node` path specifically avoids pm2's nvm-style resolution that misreads `node@22` directories as version tags.
+- Don't move `public/index.html` out of `public/` — breaks CF Pages build output path.

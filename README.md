@@ -4,10 +4,10 @@ Terminal-style landing page for [nomadamas.org](https://nomadamas.org) — NomaD
 
 ## Stack
 
-Single `public/index.html` (self-contained; assets embedded as base64 via a custom bundler tag — fonts, data, rendered template all live inside the file). Served locally by `http-server public/` via pm2, and deployed to Cloudflare Pages on push to `main` (Pages `Build output directory: public`).
+Single `public/index.html` (self-contained; assets embedded as base64 via a custom bundler tag — fonts, data, rendered template all live inside the file). Deployed to Cloudflare Pages on push to `main`.
 
 ```
-request → Cloudflare Pages (or cloudflared tunnel during migration) → public/index.html
+request → Cloudflare Pages (edge) → public/index.html
 ```
 
 The `public/` folder is the Pages build output directory; `node_modules/`, `package.json`, etc. stay at the repo root and are ignored by Pages.
@@ -19,15 +19,20 @@ npm install
 npm start   # serves on http://127.0.0.1:3030
 ```
 
-Because the served file has `Cache-Control: no-cache, no-store, must-revalidate` and `http-server` runs with `-c-1`, any edit to `public/index.html` is visible on browser refresh without restarting pm2.
+Because `http-server` runs with `-c-1`, any edit to `public/index.html` is visible on browser refresh with no server restart.
 
-## Production layout
+## Deployment
 
-- **Cloudflare Pages**: auto-deploys `public/` on push to `main` (project `nomadamas-landing-page`, `https://nomadamas.org`). Build command: `exit 0`. Output directory: `public`.
-- **(legacy, during migration only) pm2 process `nomadamas-landing`**: serves `public/` locally via http-server for dev mirroring; see `ecosystem.config.cjs`.
-- **cloudflared tunnel `nomadamas-tunnel`**: still serves other subdomains (`jeffrey-blog.nomadamas.org`, `k-skill-proxy.nomadamas.org`, etc.). The `nomadamas.org` ingress rule should be removed once Pages takes over.
+Cloudflare Pages, project `nomadamas-landing-page` connected to `NomaDamas/nomadamas-landing-page` on GitHub.
 
-Update HTML → `git add public/index.html && git commit -m 'update content' && git push` → Pages auto-deploys within ~30 seconds.
+- **Build command**: `exit 0`
+- **Build output directory**: `public`
+- **Framework preset**: None
+- **Custom domains**: `nomadamas.org`, `landing.nomadamas.org`
+
+Push to `main` → Pages auto-builds (no-op) and publishes contents of `public/`. Live within ~30 seconds.
+
+Rollback: Cloudflare Dashboard → Workers & Pages → `nomadamas-landing-page` → Deployments → past deployment → Rollback.
 
 ## Structure of `public/index.html`
 
@@ -47,7 +52,7 @@ The `<script type="__bundler/template">` block holds the actual rendered HTML as
 
 ### Editing tips
 
-Editing the template CSS/JS must go through a JSON round-trip because the stored bytes use `\"` and `\n` as escape sequences. See example in any `python3 <<EOF ... json.loads ... json.dumps(ensure_ascii=False) ...` from the commit history.
+Editing the template CSS/JS must go through a JSON round-trip because the stored bytes use `\"` and `\n` as escape sequences. See `AGENTS.md` for the safe patch pattern, and any `python3 <<EOF ... json.loads ... json.dumps(ensure_ascii=False) ...` example from the commit history.
 
 **Gotcha**: `json.dumps` normalizes `<\/script>` back to `</script>`, which breaks the outer `<script type="__bundler/template">` tag. Always re-apply `.replace('</script>', '<\\/script>')` on the JSON output before splicing back.
 
