@@ -1,25 +1,33 @@
 {
   "version": 1,
   "updatedAt": "2026-05-06",
-  "basePath": "photos/uploads/",
+  "basePath": "https://photos.nomadamas.org/album/",
   "photos": [
     {
-      "id": "2026-05-06-landing-capture",
-      "file": "2026-05-06-landing-capture.png",
+      "id": "2026-05-landing-capture",
+      "file": "2026/05/landing-capture.png",
       "caption": "Landing page test capture",
-      "note": "Album rendering test image captured from the local NomaDamas landing page.",
+      "note": "R2 upload test image for the NomaDamas photo album.",
       "takenAt": "2026-05-06",
-      "location": "Local preview",
+      "location": "NomaDamas",
       "people": [
         "@NomaDamas"
       ],
       "tags": [
         "test",
         "screenshot",
-        "album"
+        "album",
+        "r2"
       ],
-      "credit": "Local browser capture",
+      "credit": "NomaDamas",
       "alt": "Screenshot of the NomaDamas landing page local preview"
     }
-  ]
+  ],
+  "storage": {
+    "provider": "cloudflare-r2",
+    "bucket": "nomadamas-photos",
+    "customDomain": "photos.nomadamas.org",
+    "objectPrefix": "album/",
+    "publicBaseUrl": "https://photos.nomadamas.org/album/"
+  }
 }

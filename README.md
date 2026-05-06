@@ -29,6 +29,14 @@ request → Cloudflare Pages edge → public/index.html
 
 The `public/` folder is the Pages build output directory; `node_modules/`, `package.json`, etc. stay at the repo root and are ignored by Pages.
 
+## Photo album
+
+- Page: `public/album.html`
+- Metadata: `public/photos/album.json`
+- Image storage: Cloudflare R2 bucket `nomadamas-photos`
+- Public image base URL: `https://photos.nomadamas.org/album/`
+- Do not commit album image binaries to GitHub; upload them to R2 and commit only metadata.
+
 ## Updating the site
 
 ```bash
