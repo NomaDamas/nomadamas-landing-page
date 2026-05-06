@@ -5,3 +5,4 @@ node_modules/
 .playwright-mcp/
 *.png
 !docs/*.png
+!public/photos/uploads/*.png

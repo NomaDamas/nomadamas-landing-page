@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NomaDamas // Photo Album</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117;--bg-soft:#161b22;--bg-inner:#0b0f14;--fg:#e6edf3;--fg-dim:#8b949e;--fg-faint:#545d68;
+    --border:#262d36;--border-2:#30363d;--kw:#ff7b72;--str:#a5e075;--num:#d2a8ff;--var:#79c0ff;--type:#ffa657;
+    --comment:#6e7681;--punct:#8b949e;--prompt:#3fb950;--ok:#3fb950;--err:#f85149;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;background:radial-gradient(1100px 600px at 80% -10%,rgba(88,166,255,.06),transparent 60%),radial-gradient(800px 500px at 0% 110%,rgba(210,168,255,.04),transparent 60%),var(--bg);overflow-x:hidden}
+  .term{max-width:1180px;margin:28px auto 100px;padding:0 18px}
+  .titlebar{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;background:linear-gradient(to bottom,#22272e,#1a1f25);border:1px solid var(--border-2);border-bottom:none;border-radius:10px 10px 0 0;padding:10px 14px;color:var(--fg-dim);font-size:12px;letter-spacing:.02em;overflow:hidden;white-space:nowrap}
+  .dots{display:flex;gap:7px;margin-right:8px}.dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.3)}.dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+  .titlebar .path{color:var(--fg);font-weight:500}.titlebar .spacer{flex:1}.meta{color:var(--fg-faint)}
+  .screen{background:var(--bg-soft);border:1px solid var(--border-2);border-radius:0 0 10px 10px;padding:22px 26px 26px;box-shadow:0 40px 80px -20px rgba(0,0,0,.6);position:relative}
+  .kw{color:var(--kw)}.str{color:var(--str)}.num{color:var(--num)}.vr{color:var(--var)}.tp{color:var(--type)}.cmt{color:var(--comment);font-style:italic}.pn{color:var(--punct)}.dim{color:var(--fg-dim)}.faint{color:var(--fg-faint)}.bold{font-weight:700}.red{color:var(--err)}
+  a{color:var(--var);text-decoration:none;border-bottom:1px dashed rgba(121,192,255,.35)}a:hover{color:#fff;border-bottom-color:#fff}
+  .topline{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:36px;line-height:1.05;margin:8px 0 8px;letter-spacing:-.015em}.headline-a{color:var(--str)}.headline-b{color:var(--var)}
+  .sub{color:var(--fg-dim);max-width:72ch}.section{margin-top:22px;border-top:1px solid var(--border);padding-top:18px}
+  .section h2{margin:0 0 14px;font-size:13px;color:var(--fg-dim);display:flex;align-items:center;gap:10px;font-weight:500}.tag{color:var(--prompt);font-weight:800}.cmd{color:var(--kw);font-weight:700}.pth{color:var(--var)}.flag{color:var(--type)}.cnt{margin-left:auto;color:var(--fg-faint);font-size:11px;font-style:italic}
+  .album-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-2px 0 12px;color:var(--fg-dim);font-size:12px}.album-path{border:1px solid var(--border);border-radius:999px;padding:2px 9px;background:var(--bg-inner);color:var(--var);white-space:nowrap}
+  .album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}@media(max-width:900px){.album-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:640px){.album-grid{grid-template-columns:1fr}.term{padding:0 14px}.screen{padding:18px 16px 20px}h1{font-size:30px}}
+  .album-photo,.album-empty,.album-error{border:1px solid var(--border);border-radius:6px;background:var(--bg-inner);color:inherit;overflow:hidden}.album-photo{display:block;transition:border-color .15s,transform .15s,box-shadow .15s}.album-photo:hover{border-color:var(--str);transform:translateY(-1px);box-shadow:0 4px 20px -10px rgba(165,224,117,.38)}
+  .album-thumb{position:relative;aspect-ratio:4/3;background:linear-gradient(135deg,rgba(121,192,255,.10),rgba(210,168,255,.08)),repeating-linear-gradient(45deg,rgba(139,148,158,.08) 0 10px,transparent 10px 20px);border-bottom:1px solid var(--border);display:grid;place-items:center;overflow:hidden}.album-thumb::after{content:"NO PREVIEW";color:var(--fg-faint);font-size:11px;letter-spacing:.18em}.album-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+  .album-body{padding:12px 14px 14px}.album-caption{font-weight:700;color:var(--fg);font-size:13px;margin-bottom:5px;overflow-wrap:anywhere}.album-note{color:var(--fg-dim);font-size:12px;line-height:1.5;min-height:36px;overflow-wrap:anywhere}.album-meta{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;color:var(--fg-faint);font-size:11px}.album-meta span{border:1px solid var(--border);border-radius:999px;padding:1px 7px;background:rgba(121,192,255,.04)}.date{color:var(--type)}.people{color:var(--var)}.place{color:var(--str)}
+  .album-empty,.album-error{grid-column:1/-1;padding:16px}.album-empty-title{font-weight:800;color:var(--str);margin-bottom:6px}.album-empty ol{margin:10px 0 0 20px;color:var(--fg-dim);font-size:12.5px}.album-empty li{margin:4px 0}code{color:var(--var);background:rgba(121,192,255,.06);padding:1px 5px;border-radius:4px}
+  .footer{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;padding-top:14px;border-top:1px solid var(--border);color:var(--fg-faint);font-size:11.5px;letter-spacing:.03em}.dotpulse{display:inline-block;width:7px;height:7px;background:var(--ok);border-radius:50%;vertical-align:middle;margin-right:6px;animation:pulse 1.8s infinite ease-in-out}@keyframes pulse{0%,100%{opacity:.5;transform:scale(.85)}50%{opacity:1;transform:scale(1.05)}}
+</style>
+</head>
+<body>
+<div class="term">
+  <div class="titlebar">
+    <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <span class="path">nomadamas@seoul</span><span class="pn">:</span><span class="vr">~/hackerhouse/photos</span><span class="spacer"></span><span class="meta" id="clock">--:--:-- KST</span>
+  </div>
+  <div class="screen">
+    <div class="topline">
+      <div>
+        <div class="cmt">// album.html</div>
+        <h1><span class="headline-a">Photo</span> <span class="headline-b">Album</span><span class="pn">.</span></h1>
+        <div class="sub">A separate tab for NomaDamas house photos. Files stay in <span class="vr">public/photos/uploads/</span>; captions and people metadata stay in <span class="vr">public/photos/album.json</span>.</div>
+      </div>
+      <a class="album-path" href="index.html">← back to landing</a>
+    </div>
+    <div class="section">
+      <h2><span class="tag">$</span> <span class="cmd">cat</span> <span class="pth">./photos/album.json</span> <span class="cnt" id="album-count">// loading</span></h2>
+      <div class="album-head"><span class="cmt">// upload photos here</span><span class="album-path">public/photos/uploads/</span><span class="cmt">// captions live in</span><a class="album-path" href="photos/album.json" target="_blank" rel="noopener">public/photos/album.json</a></div>
+      <div class="album-grid" id="album-grid" aria-live="polite"><div class="album-empty"><div class="album-empty-title">scanning album metadata…</div><div class="dim">Reading <code>public/photos/album.json</code>.</div></div></div>
+    </div>
+    <div class="footer"><span><span class="dotpulse"></span>nomadamas.album · v26.05</span><span class="faint">//</span><span>SEOUL · KR</span></div>
+  </div>
+</div>
+<script>
+function tick(){const d=new Date();const f=n=>String(n).padStart(2,"0");const k=new Date(d.getTime()+d.getTimezoneOffset()*60000+9*3600000);document.getElementById("clock").textContent=`${f(k.getHours())}:${f(k.getMinutes())}:${f(k.getSeconds())} KST`;}tick();setInterval(tick,1000);
+function escapeHtml(s){return String(s||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function joinAlbumPath(base,file){if(!file)return"";if(/^https?:\/\//i.test(file)||file.startsWith("/"))return file;return(base||"").replace(/\/$/,"")+"/"+file.replace(/^\//,"");}
+function asList(value){if(Array.isArray(value))return value.filter(Boolean).join(", ");return value||"";}
+function empty(metaUrl){return `<div class="album-empty"><div class="album-empty-title">album ready — waiting for the first upload</div><div class="dim">사진 파일과 캡션 메타데이터를 분리해서 관리합니다.</div><ol><li>사진 파일을 <code>public/photos/uploads/</code>에 넣습니다.</li><li><code>${escapeHtml(metaUrl)}</code>의 <code>photos</code> 배열에 캡션 객체를 추가합니다.</li><li><code>file</code>, <code>caption</code>, <code>takenAt</code>, <code>people</code>, <code>location</code>, <code>tags</code>를 채우면 카드가 자동 렌더링됩니다.</li></ol></div>`;}
+(function(){const host=document.getElementById("album-grid");const count=document.getElementById("album-count");const metaUrl="photos/album.json";fetch(metaUrl,{cache:"no-store"}).then(res=>{if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json();}).then(album=>{const photos=Array.isArray(album.photos)?album.photos:[];const base=album.basePath||"photos/uploads/";count.textContent=`// ${photos.length} photos · ${metaUrl}`;if(!photos.length){host.innerHTML=empty(metaUrl);return;}host.innerHTML=photos.map(photo=>{const src=joinAlbumPath(base,photo.src||photo.file);const caption=photo.caption||photo.title||photo.id||"untitled photo";const note=photo.note||photo.description||"";const people=asList(photo.people);const tags=asList(photo.tags);const meta=[photo.takenAt&&`<span class="date">${escapeHtml(photo.takenAt)}</span>`,photo.location&&`<span class="place">${escapeHtml(photo.location)}</span>`,people&&`<span class="people">${escapeHtml(people)}</span>`,tags&&`<span>#${escapeHtml(tags.replace(/, /g," #"))}</span>`].filter(Boolean).join("");return `<a class="album-photo" href="${escapeHtml(src)}" target="_blank" rel="noopener"><div class="album-thumb"><img src="${escapeHtml(src)}" alt="${escapeHtml(photo.alt||caption)}" loading="lazy"></div><div class="album-body"><div class="album-caption">${escapeHtml(caption)}</div><div class="album-note">${escapeHtml(note||"No note yet. Add one in album.json.")}</div><div class="album-meta">${meta||`<span>${escapeHtml(photo.id||"metadata pending")}</span>`}</div></div></a>`;}).join("");host.querySelectorAll("img").forEach(img=>img.addEventListener("error",()=>img.remove(),{once:true}));}).catch(err=>{count.textContent=`// metadata error · ${metaUrl}`;host.innerHTML=`<div class="album-error"><div class="red bold">album metadata load failed</div><div class="dim">Check <code>public/photos/album.json</code>. ${escapeHtml(err.message||String(err))}</div></div>`;});})();
+</script>
+</body>
+</html>

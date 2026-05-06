@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "updatedAt": "2026-05-06",
+  "basePath": "photos/uploads/",
+  "photos": [
+    {
+      "id": "2026-05-06-landing-capture",
+      "file": "2026-05-06-landing-capture.png",
+      "caption": "Landing page test capture",
+      "note": "Album rendering test image captured from the local NomaDamas landing page.",
+      "takenAt": "2026-05-06",
+      "location": "Local preview",
+      "people": [
+        "@NomaDamas"
+      ],
+      "tags": [
+        "test",
+        "screenshot",
+        "album"
+      ],
+      "credit": "Local browser capture",
+      "alt": "Screenshot of the NomaDamas landing page local preview"
+    }
+  ]
+}
