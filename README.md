@@ -89,9 +89,9 @@ Tested at 360 / 375 / 393 / 768 px viewports.
 
 Project cards + member list are hardcoded in the `data` object inside the template's render script.
 
-- `data.projects` — add an object `{ name, owner, desc, lang, stars, forks, url }`. The stats bar (`15 repos · 10,444 ★`) auto-sums.
+- `data.projects` — add an object `{ name, owner, desc, lang, stars, forks, url }`. The stats bar (`16 repos · 16,370 ★`) auto-sums.
 - `data.members` — add an object `{ handle, name, tags, notable }`.
-- Non-NomaDamas repos must include an `owner` field (e.g. `Marker-Inc-Korea`, `vkehfdl1`). The card URL uses `${p.owner}/${p.name}`.
+- Non-NomaDamas repos must include an `owner` field (e.g. `Marker-Inc-Korea`). The card URL uses `${p.owner}/${p.name}`.
 - GitHub star counts are static snapshots — refresh manually when they drift.
 
 All data edits go through the JSON round-trip pattern described in [`AGENTS.md`](AGENTS.md).
