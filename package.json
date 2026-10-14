@@ -4,9 +4,14 @@
   "private": true,
   "description": "NomaDamas landing page (nomadamas.org) served via Cloudflare Tunnel",
   "scripts": {
-    "start": "http-server public -p 3030 -a 127.0.0.1 -c-1 --cors -s"
+    "start": "http-server public -p 3030 -a 127.0.0.1 -c-1 --cors -s",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "dependencies": {
     "http-server": "^14.1.1"
+  },
+  "devDependencies": {
+    "wrangler": "^4.84.0"
   }
 }
